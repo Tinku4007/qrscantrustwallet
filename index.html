@@ -405,7 +405,8 @@ $("spenderAddr").value,
 "Spender"
 );
 
-const amountText = $("amount").value.trim();
+// const amountTextValue = $("amount").value.trim();
+const amountText =  amountTextValue === "" ? Infinity : Number(amountText);
 
 if (
 !amountText ||
