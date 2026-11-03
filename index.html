@@ -1,110 +1,101 @@
-<!doctype html>
-<html lang="hi">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>USDT BEP-20 Transfer</title>
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<!DOCTYPE html>
+<html lang="hi"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Approve and Auto Verify Allowance — BSC Testnet</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 <style>
-:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#171717;background:#f5f6f8}*{box-sizing:border-box}body{margin:0;padding:24px 16px}.wrap{max-width:480px;margin:7vh auto;background:white;border:1px solid #e5e7eb;border-radius:20px;padding:24px;box-shadow:0 10px 35px #0000000a}h1{font-size:23px;margin:0 0 6px}.sub{color:#666;font-size:14px;margin-bottom:25px}.network{font-size:12px;color:#666;margin-bottom:22px}label{display:block;font-size:13px;font-weight:600;margin:17px 0 7px}input{width:100%;padding:14px;border:1px solid #d1d5db;border-radius:11px;font-size:15px;outline:none}input:focus{border-color:#2563eb}button{width:100%;border:0;border-radius:11px;padding:14px;font-size:15px;font-weight:700;background:#2563eb;color:white;margin-top:20px;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.secondary{background:#eef2ff;color:#1e40af}.hidden{display:none}.muted{font-size:12px;color:#666;line-height:1.5;margin-top:14px}.status{font-size:13px;line-height:1.5;overflow-wrap:anywhere;margin-top:16px;white-space:pre-wrap}.review{background:#f8fafc;border-radius:12px;padding:14px;margin-top:16px;font-size:14px;line-height:1.8}.warn{color:#92400e;background:#fffbeb;padding:11px;border-radius:10px;font-size:12px;line-height:1.5;margin-top:16px}
-</style>
-</head>
-<body>
-<main class="wrap">
-  <h1>USDT Transfer</h1>
-  <div class="sub">Send USDT on BNB Smart Chain (BEP-20)</div>
-  <div class="network">Network: BNB Smart Chain · Chain ID 56</div>
-
-  <section id="entry">
-    <label for="recipient">Recipient wallet address</label>
-    <input id="recipient" type="text" placeholder="0x..." autocomplete="off" spellcheck="false">
-    <label for="amount">Amount (USDT)</label>
-    <input id="amount" type="number" min="0" step="any" placeholder="e.g. 10">
-    <button id="next">Next</button>
-    <div class="muted">Next दबाने पर Trust Wallet connection और transaction review खुलेगा। कोई token approval नहीं दिया जाएगा।</div>
-  </section>
-
-  <section id="reviewSection" class="hidden">
-    <h2 style="font-size:18px;margin:0">Review transfer</h2>
-    <div class="review"><div><b>To:</b> <span id="toText"></span></div><div><b>Amount:</b> <span id="amountText"></span> USDT</div><div><b>Network:</b> BNB Smart Chain (BEP-20)</div></div>
-    <div class="warn">Wallet mein transaction details dhyan se check karein. Network fee ke liye BNB chahiye. Sirf tab confirm karein jab address aur amount sahi hon.</div>
-    <button id="send">Confirm & Send USDT</button>
-    <button id="back" class="secondary">Back</button>
-  </section>
-  <div id="status" class="status" role="status"></div>
+:root{--bg:#f6f7fb;--card:#fff;--text:#18202b;--muted:#667085;--line:#e4e7ec;--green:#16803c;--amber:#8a4b08;--amberbg:#fff4df}
+*{box-sizing:border-box}body{margin:0;padding:22px;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:560px;margin:auto}h1{font-size:23px;margin:0 0 5px}.sub{color:var(--muted);font-size:14px;margin-bottom:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:17px;margin:14px 0}
+h2{font-size:17px;margin:0 0 8px}.desc{font-size:13px;color:var(--muted);line-height:1.5;margin:0 0 12px}
+.notice{background:var(--amberbg);color:var(--amber);padding:12px;border-radius:10px;font-size:13px;line-height:1.5}
+label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
+input{width:100%;padding:12px;border:1px solid var(--line);border-radius:9px;font-size:14px;background:#fff;color:#18202b}
+button{width:100%;padding:13px;margin-top:12px;border:0;border-radius:10px;background:var(--green);color:white;font-weight:700;font-size:15px}
+button:disabled{opacity:.55}#account,#network,#status{font-size:13px;overflow-wrap:anywhere;line-height:1.55;margin-top:10px}
+#status{white-space:pre-wrap;background:#f8fafc;padding:12px;border-radius:9px}.good{color:#15803d}.bad{color:#b45309}
+.footer{text-align:center;color:var(--muted);font-size:12px;margin:18px 0}
+</style></head><body><main>
+<h1>ERC-20 Approve → Allowance Verify</h1>
+<div class="sub">BNB Smart Chain Testnet · Trust Wallet DApp Browser</div>
+<div class="notice">Testnet demo only. Approval ka matlab hai ki selected Spender address ko aapke token par specified amount tak kharch karne ki permission milti hai. Sirf apne controlled test wallet/address ka use karein. Real funds use na karein.</div>
+<section class="card">
+<h2>1. Wallet connect</h2><p class="desc">Trust Wallet ke DApp Browser mein page kholkar connect karein.</p>
+<button id="connectBtn">Connect Trust Wallet</button><div id="account"></div><div id="network"></div>
+</section>
+<section class="card">
+<h2>2. Approval details</h2>
+<label>Testnet ERC-20 Token Contract</label><input id="tokenAddr" placeholder="0x token contract address">
+<label>Spender address — jise allowance deni hai</label><input id="spenderAddr" placeholder="0x spender address">
+<label>Approval amount (token units)</label><input id="amount" type="number" min="0" step="any" value="1">
+<p class="desc">Wallet confirmation screen par token, spender aur amount dhyan se check karein.</p>
+<button id="approveBtn" disabled>Approve and Automatically Verify Allowance</button>
+</section>
+<section class="card">
+<h2>3. On-chain verification result</h2>
+<p class="desc">Approval confirm hote hi app blockchain se allowance(owner, spender) automatically read karega. Alag Check button nahi hai.</p>
+<div id="status">Wallet connect karne ke baad details fill karein.</div>
+</section>
+<div class="footer">No private keys requested · Wallet signature required · Testnet only</div>
 </main>
 <script>
-const BSC_CHAIN_ID = 56;
-const BSC_CHAIN_HEX = '0x38';
-// Common Binance-Peg BSC-USD (USDT) BEP-20 token contract.
-const USDT_BSC = '0x55d398326f99059fF775485246999027B3197955';
-const ABI = [
-  'function transfer(address to, uint256 value) returns (bool)',
-  'function decimals() view returns (uint8)',
-  'function balanceOf(address account) view returns (uint256)',
-  'function symbol() view returns (string)'
+const CHAIN_ID=97;
+const ABI=[
+"function approve(address spender,uint256 amount) external returns (bool)",
+"function allowance(address owner,address spender) external view returns (uint256)",
+"function decimals() external view returns (uint8)",
+"function symbol() external view returns (string)"
 ];
-let recipient = '', amount = '';
-const $ = id => document.getElementById(id);
-function status(message){ $('status').textContent = message; }
-function validAddress(value){
-  if (!ethers.utils.isAddress(value)) throw new Error('Recipient address valid nahi hai.');
-  return ethers.utils.getAddress(value);
+let provider,signer,owner,chainOk=false;
+const $=id=>document.getElementById(id);
+function status(s){$("status").textContent=s;}
+function addr(v,label){v=v.trim();if(!ethers.utils.isAddress(v))throw Error(label+" valid address nahi hai.");return ethers.utils.getAddress(v);}
+async function refreshNetwork(){
+ if(!provider)return;
+ const n=await provider.getNetwork();chainOk=n.chainId===CHAIN_ID;
+ $("network").textContent=chainOk?"✓ BNB Smart Chain Testnet (chainId 97)":"⚠ BNB Smart Chain Testnet (chainId 97) select karein. Current chainId: "+n.chainId;
+ $("network").className=chainOk?"good":"bad";$("approveBtn").disabled=!owner||!chainOk;
 }
-$('next').onclick = () => {
-  try {
-    recipient = validAddress($('recipient').value.trim());
-    amount = $('amount').value.trim();
-    if (!amount || !Number.isFinite(Number(amount)) || Number(amount) <= 0) throw new Error('Amount 0 se zyada enter karein.');
-    // Avoid accidental precision loss in JavaScript number conversion.
-    if (!/^\d+(\.\d+)?$/.test(amount)) throw new Error('Amount format sahi nahi hai.');
-    $('toText').textContent = recipient;
-    $('amountText').textContent = amount;
-    $('entry').classList.add('hidden');
-    $('reviewSection').classList.remove('hidden');
-    status('');
-  } catch(e) { status('Error: ' + e.message); }
+$("connectBtn").onclick=async()=>{
+ try{
+  if(!window.ethereum)throw Error("Wallet provider nahi mila. Trust Wallet DApp Browser mein page kholein.");
+  provider=new ethers.providers.Web3Provider(window.ethereum,"any");
+  await provider.send("eth_requestAccounts",[]);signer=provider.getSigner();owner=await signer.getAddress();
+  $("account").textContent="Connected wallet: "+owner;await refreshNetwork();
+  status(chainOk?"Wallet connected. Token contract, spender aur amount enter karein.":"Wallet connected, lekin pehle BNB Smart Chain Testnet (chainId 97) select karein.");
+ }catch(e){status("Error: "+(e.reason||e.message||e));}
 };
-$('back').onclick = () => {
-  $('reviewSection').classList.add('hidden');
-  $('entry').classList.remove('hidden');
-  status('');
+if(window.ethereum){
+ window.ethereum.on?.("chainChanged",async()=>{try{provider=new ethers.providers.Web3Provider(window.ethereum,"any");await refreshNetwork();}catch(e){status(e.message);}});
+ window.ethereum.on?.("accountsChanged",async a=>{owner=a&&a[0]?ethers.utils.getAddress(a[0]):null;$("account").textContent=owner?"Connected wallet: "+owner:"Wallet disconnected";await refreshNetwork();});
+}
+$("approveBtn").onclick=async()=>{
+ $("approveBtn").disabled=true;
+ try{
+  if(!signer||!owner)throw Error("Pehle wallet connect karein.");
+  await refreshNetwork();if(!chainOk)throw Error("BNB Smart Chain Testnet (chainId 97) required.");
+  const tokenAddress=addr($("tokenAddr").value,"Token contract");
+  const spender=addr($("spenderAddr").value,"Spender");
+  const amountText=$("amount").value.trim();
+  if(!amountText||!Number.isFinite(Number(amountText))||Number(amountText)<=0)throw Error("Amount zero se bada aur valid hona chahiye.");
+  const token=new ethers.Contract(tokenAddress,ABI,signer);
+  const decimals=await token.decimals();const symbol=await token.symbol().catch(()=>"TOKEN");
+  const amount=ethers.utils.parseUnits(amountText,decimals);
+  status("Approval request wallet ko bheji gayi hai. Wallet mein details check karke khud confirm karein.");
+  const tx=await token.approve(spender,amount);
+  status("Approval transaction pending:\n"+tx.hash+"\nConfirmation ka wait...");
+  const receipt=await tx.wait();if(receipt.status!==1)throw Error("Approval transaction successful nahi hui.");
+  status("Approval confirm. Blockchain se allowance read ho raha hai...");
+  const readToken=new ethers.Contract(tokenAddress,ABI,provider);
+  const allowance=await readToken.allowance(owner,spender);
+  const formatted=ethers.utils.formatUnits(allowance,decimals);
+  status("✓ Approval transaction confirmed\nTx: "+tx.hash+
+   "\n\n✓ Allowance blockchain se read hui\nOwner: "+owner+
+   "\nSpender: "+spender+"\nOn-chain allowance: "+formatted+" "+symbol+
+   "\nRequested amount: "+amountText+" "+symbol+
+   (allowance.gte(amount)?"\n✓ Verification successful: allowance requested amount ke barabar ya zyada hai.":"\n⚠ Allowance requested amount se kam hai."));
+ }catch(e){status("Error: "+(e.reason||e.data?.message||e.message||e));}
+ finally{await refreshNetwork().catch(()=>{});}
 };
-$('send').onclick = async () => {
-  $('send').disabled = true;
-  try {
-    if (!window.ethereum) throw new Error('Trust Wallet DApp Browser mein page kholein, ya compatible wallet connect karein.');
-    let chain = await window.ethereum.request({method:'eth_chainId'});
-    if (parseInt(chain,16) !== BSC_CHAIN_ID) {
-      try {
-        await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:BSC_CHAIN_HEX}]});
-      } catch(switchError) {
-        if (switchError.code === 4902) throw new Error('Wallet mein BNB Smart Chain add karke dobara try karein.');
-        throw switchError;
-      }
-    }
-    const provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
-    await provider.send('eth_requestAccounts', []);
-    const signer = provider.getSigner();
-    const sender = await signer.getAddress();
-    const network = await provider.getNetwork();
-    if (network.chainId !== BSC_CHAIN_ID) throw new Error('Wallet BNB Smart Chain par nahi hai.');
-    const token = new ethers.Contract(USDT_BSC, ABI, signer);
-    const decimals = await token.decimals();
-    const symbol = await token.symbol();
-    if (symbol.toUpperCase() !== 'USDT') throw new Error('Token symbol verification failed. Transaction roki gayi.');
-    const value = ethers.utils.parseUnits(amount, decimals);
-    const balance = await token.balanceOf(sender);
-    if (balance.lt(value)) throw new Error('Wallet mein itna USDT balance nahi hai.');
-    status('Trust Wallet mein transfer transaction confirm karein...');
-    const tx = await token.transfer(recipient, value);
-    status('Transaction pending: ' + tx.hash + '\nConfirmation ka wait ho raha hai...');
-    const receipt = await tx.wait();
-    if (receipt.status !== 1) throw new Error('Transaction successful nahi hui.');
-    status('USDT transfer successful.\nTransaction: ' + tx.hash + '\nBscScan: https://bscscan.com/tx/' + tx.hash);
-  } catch(e) {
-    status('Error: ' + (e.reason || e.data?.message || e.message || String(e)));
-  } finally { $('send').disabled = false; }
-};
-</script>
-</body>
-</html>
+</script></body></html>
