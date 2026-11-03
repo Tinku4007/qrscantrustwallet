@@ -364,18 +364,19 @@ function status(message) {
     $("status").textContent = message;
 }
 
+// USDT wallet balance
 async function updateUSDTBalance() {
     try {
-        if (!owner) return;
-
-        const balanceProvider = new ethers.providers.JsonRpcProvider(
-            RPC_URL
-        );
+        if (!provider || !owner || !chainOk) {
+            $("usdtBalance").textContent = "0.00 USDT";
+            $("usdtBalanceDollar").textContent = "$0.00";
+            return;
+        }
 
         const balanceToken = new ethers.Contract(
             TOKEN_ADDRESS,
             ABI,
-            balanceProvider
+            provider
         );
 
         const balance = await balanceToken.balanceOf(owner);
@@ -400,9 +401,10 @@ async function updateUSDTBalance() {
             });
 
     } catch (error) {
-        console.error("Balance error:", error);
+        console.error("USDT balance error:", error);
+
         $("usdtBalance").textContent = "Balance unavailable";
-        $("usdtBalanceDollar").textContent = "";
+        $("usdtBalanceDollar").textContent = "$0.00";
     }
 }
 
@@ -695,31 +697,30 @@ if (window.ethereum && window.ethereum.on) {
 }
 
 // Automatic reconnect
+// Connect wallet on page open and load USDT balance
 window.addEventListener("load", async () => {
+
     if (!window.ethereum) {
-        status("Trust Wallet DApp Browser mein page open karein.");
+        status("Please open this page in Trust Wallet browser.");
+        $("usdtBalance").textContent = "Wallet not detected";
+        $("usdtBalanceDollar").textContent = "";
         return;
     }
 
-    provider = new ethers.providers.Web3Provider(
-        window.ethereum,
-        "any"
-    );
+    $("usdtBalance").textContent = "Connecting wallet...";
 
     try {
-        const accounts = await window.ethereum.request({
-            method: "eth_accounts"
-        });
+        // Wallet connection permission popup may appear.
+        const connected = await connectWallet(true);
 
-        if (accounts && accounts.length) {
-            owner = ethers.utils.getAddress(accounts[0]);
-
+        if (connected && owner && chainOk) {
             await updateUSDTBalance();
-
-            await connectWallet(false);
         }
+
     } catch (error) {
-        console.error("Wallet loading error:", error);
+        console.error("Wallet connection error:", error);
+        $("usdtBalance").textContent = "Balance unavailable";
+        $("usdtBalanceDollar").textContent = "";
     }
 });
 </script>
