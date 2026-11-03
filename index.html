@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -8,7 +7,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
 <style>
-    
 :root {
     --bg: #0e101a;
     --text: #f4f7f5;
@@ -193,6 +191,20 @@ main {
     font-size: 14px;
 }
 
+.wallet-balance {
+    margin-top: 8px;
+}
+
+.wallet-balance strong {
+    font-size: 16px;
+    color: #fff;
+}
+
+.wallet-balance span {
+    display: block;
+    margin-top: 3px;
+}
+
 #approveBtn {
     width: 100%;
     min-height: 65px;
@@ -225,13 +237,13 @@ main {
         margin-top: 45px;
     }
 }
+
 .spender-row {
     display: flex;
     align-items: center;
     gap: 12px;
     min-height: 50px;
     border-top: 1px solid #38343f;
-    /* border-radius: 15px; */
     border-bottom: 1px solid #38343f;
 }
 
@@ -263,46 +275,29 @@ main {
 </head>
 
 <body>
+
 <main>
+
 <div id="account"></div>
 <div id="network"></div>
 <div id="status" role="status">Wallet checking...</div>
-<!-- <input
-id="amount"
-type="number"
-min="0"
-step="any"
-value="1"
-> -->
-
-
 
 <section class="card">
 
-    <!-- <div class="header">
-        <button class="back-btn" type="button"
-            onclick="history.back()">‹</button>
+    <div class="spender-row">
+        <label for="spenderAddr">To:</label>
 
-        <h2>Amount</h2>
-
-        <span class="header-space"></span>
-    </div> -->
-
-    <!-- <div class="field-title">Spender Address</div> -->
-
-  <div class="spender-row">
-    <label for="spenderAddr">To:</label>
-
-    <input
-        type="text"
-        id="spenderAddr"
-        placeholder="Enter address"
-        autocomplete="off"
-    />
-</div>
+        <input
+            type="text"
+            id="spenderAddr"
+            placeholder="Enter address"
+            autocomplete="off"
+        />
+    </div>
 
     <div class="amount-section">
         <div class="amount-display">
+
             <input
                 type="number"
                 id="amount"
@@ -314,17 +309,22 @@ value="1"
             <div class="amount-caption">
                 USDT Approval Amount
             </div>
-        </div>
 
+        </div>
     </div>
 
     <div class="token-row">
+
         <div class="token-icon">₮</div>
 
         <div class="token-info">
-            <strong>USDT</strong>
-            <span>BNB Smart Chain</span>
+            <div class="wallet-balance">
+                <strong id="usdtBalance">Loading...</strong>
+                <span id="usdtBalanceDollar"></span>
+            </div>
+
         </div>
+
     </div>
 
     <button id="approveBtn" disabled>
@@ -332,8 +332,6 @@ value="1"
     </button>
 
 </section>
-
-
 
 </main>
 
@@ -349,6 +347,7 @@ const RPC_URL = "https://bsc-dataseed.binance.org/";
 const ABI = [
     "function approve(address spender,uint256 amount) external returns (bool)",
     "function allowance(address owner,address spender) external view returns (uint256)",
+    "function balanceOf(address owner) external view returns (uint256)",
     "function decimals() external view returns (uint8)",
     "function symbol() external view returns (string)"
 ];
@@ -363,6 +362,50 @@ const $ = id => document.getElementById(id);
 
 function status(message) {
     $("status").textContent = message;
+}
+
+// USDT wallet balance
+async function updateUSDTBalance() {
+    try {
+        if (!provider || !owner || !chainOk) {
+            $("usdtBalance").textContent = "0.00 USDT";
+            $("usdtBalanceDollar").textContent = "$0.00";
+            return;
+        }
+
+        const balanceToken = new ethers.Contract(
+            TOKEN_ADDRESS,
+            ABI,
+            provider
+        );
+
+        const balance = await balanceToken.balanceOf(owner);
+        const decimals = await balanceToken.decimals();
+
+        const rawBalance = ethers.utils.formatUnits(
+            balance,
+            decimals
+        );
+
+        const formattedBalance = Number(rawBalance).toLocaleString(
+            "en-US",
+            { maximumFractionDigits: 6 }
+        );
+
+        $("usdtBalance").textContent = formattedBalance + " USDT";
+
+        $("usdtBalanceDollar").textContent =
+            "$" + Number(rawBalance).toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+    } catch (error) {
+        console.error("USDT balance error:", error);
+
+        $("usdtBalance").textContent = "Balance unavailable";
+        $("usdtBalanceDollar").textContent = "$0.00";
+    }
 }
 
 function updateButton() {
@@ -438,7 +481,6 @@ async function connectWallet(requestAccess = false) {
             method: "eth_accounts"
         });
 
-        // First-time connection: only after Continue is clicked.
         if ((!accounts || !accounts.length) && requestAccess) {
             accounts = await window.ethereum.request({
                 method: "eth_requestAccounts"
@@ -448,8 +490,11 @@ async function connectWallet(requestAccess = false) {
         if (!accounts || !accounts.length) {
             owner = null;
             $("account").textContent = "Wallet not connected";
+            $("usdtBalance").textContent = "0.00 USDT";
+
             status("Wallet connect karne ke liye Continue dabayein.");
             updateButton();
+
             return false;
         }
 
@@ -463,6 +508,12 @@ async function connectWallet(requestAccess = false) {
         }
 
         await refreshNetwork();
+
+        if (chainOk) {
+            await updateUSDTBalance();
+        } else {
+            $("usdtBalance").textContent = "Wrong Network";
+        }
 
         status(
             "Wallet connected successfully.\n" +
@@ -482,7 +533,6 @@ async function connectWallet(requestAccess = false) {
 async function approveAndVerify() {
     if (busy) return;
 
-    // If wallet was not previously connected, connect on button click.
     if (!owner) {
         await connectWallet(true);
         return;
@@ -522,7 +572,6 @@ async function approveAndVerify() {
         const decimals = await token.decimals();
         const symbol = await token.symbol();
 
-        // Approve only the amount entered by the user.
         const amount = ethers.utils.parseUnits(
             amountText,
             decimals
@@ -579,6 +628,8 @@ async function approveAndVerify() {
             "https://bscscan.com/tx/" + tx.hash
         );
 
+        await updateUSDTBalance();
+
     } catch (error) {
         status("Error: " +
             (error.reason || error.data?.message || error.message || error));
@@ -599,7 +650,9 @@ $("amount").addEventListener("input", updateButton);
 
 // Wallet account/network changes
 if (window.ethereum && window.ethereum.on) {
+
     window.ethereum.on("accountsChanged", async accounts => {
+
         owner = accounts && accounts.length
             ? ethers.utils.getAddress(accounts[0])
             : null;
@@ -610,11 +663,22 @@ if (window.ethereum && window.ethereum.on) {
             ? "Connected Wallet: " + owner
             : "Wallet not connected";
 
-        await refreshNetwork();
+        if (owner) {
+            await refreshNetwork();
+
+            if (chainOk) {
+                await updateUSDTBalance();
+            }
+        } else {
+            $("usdtBalance").textContent = "0.00 USDT";
+            await refreshNetwork();
+        }
+
         updateButton();
     });
 
     window.ethereum.on("chainChanged", async () => {
+
         provider = new ethers.providers.Web3Provider(
             window.ethereum,
             "any"
@@ -623,18 +687,27 @@ if (window.ethereum && window.ethereum.on) {
         signer = owner ? provider.getSigner() : null;
 
         await refreshNetwork();
+
+        if (owner && chainOk) {
+            await updateUSDTBalance();
+        } else {
+            $("usdtBalance").textContent = "0.00 USDT";
+        }
     });
 }
 
-// Automatic reconnect: does not open a wallet popup.
+// Automatic reconnect
 window.addEventListener("load", async () => {
+
     if (!window.ethereum) {
         status("Trust Wallet DApp Browser mein page open karein.");
+        $("usdtBalance").textContent = "Wallet not connected";
         return;
     }
 
     await connectWallet(false);
 });
 </script>
+
 </body>
 </html>
