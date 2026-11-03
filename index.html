@@ -624,26 +624,6 @@ window.addEventListener("load", async () => {
 
     await connectWallet(false);
 });
-
-const receipt = await tx.wait();
-
-const statusBox = document.getElementById("status");
-
-statusBox.style.display = "block";
-statusBox.innerHTML = `
-    <div style="padding:15px; background:#10251c; border-radius:12px; color:#fff;">
-        <h3 style="color:#35d07f;">Approval Successful</h3>
-        <p>USDT approval transaction confirmed.</p>
-        <a
-            href="https://bscscan.com/tx/${receipt.transactionHash}"
-            target="_blank"
-            rel="noopener noreferrer"
-            style="color:#35d07f;"
-        >
-            View Transaction on BscScan
-        </a>
-    </div>
-`;
 </script>
 </body>
 </html>
