@@ -271,6 +271,35 @@ main {
 .spender-row input:focus {
     box-shadow: none;
 }
+
+.skeleton {
+    display: block;
+    border-radius: 6px;
+    background: linear-gradient(
+        90deg,
+        #252525 25%,
+        #3a3a3a 50%,
+        #252525 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.4s infinite;
+}
+
+.skeleton-balance {
+    width: 145px;
+    height: 24px;
+}
+
+.skeleton-dollar {
+    width: 75px;
+    height: 15px;
+    margin-top: 8px;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
 </style>
 </head>
 
@@ -319,8 +348,8 @@ main {
 
         <div class="token-info">
             <div class="wallet-balance">
-                <strong id="usdtBalance">Loading...</strong>
-                <span id="usdtBalanceDollar"></span>
+               <strong id="usdtBalance" class="skeleton skeleton-balance"></strong>
+    <span id="usdtBalanceDollar" class="skeleton skeleton-dollar"></span>
             </div>
 
         </div>
@@ -364,12 +393,20 @@ function status(message) {
     $("status").textContent = message;
 }
 
-// USDT wallet balance
+// USDT wallet balance // 
+
 async function updateUSDTBalance() {
+
+    showBalanceSkeleton();
+
     try {
         if (!provider || !owner || !chainOk) {
-            $("usdtBalance").textContent = "0.00 USDT";
-            $("usdtBalanceDollar").textContent = "$0.00";
+            hideBalanceSkeleton();
+
+            $("usdtBalance").textContent =
+                !owner ? "Wallet not connected" : "Wrong Network";
+
+            $("usdtBalanceDollar").textContent = "";
             return;
         }
 
@@ -392,7 +429,10 @@ async function updateUSDTBalance() {
             { maximumFractionDigits: 6 }
         );
 
-        $("usdtBalance").textContent = formattedBalance + " USDT";
+        hideBalanceSkeleton();
+
+        $("usdtBalance").textContent =
+            formattedBalance + " USDT";
 
         $("usdtBalanceDollar").textContent =
             "$" + Number(rawBalance).toLocaleString("en-US", {
@@ -401,10 +441,13 @@ async function updateUSDTBalance() {
             });
 
     } catch (error) {
+
         console.error("USDT balance error:", error);
 
+        hideBalanceSkeleton();
+
         $("usdtBalance").textContent = "Balance unavailable";
-        $("usdtBalanceDollar").textContent = "$0.00";
+        $("usdtBalanceDollar").textContent = "";
     }
 }
 
@@ -695,30 +738,52 @@ if (window.ethereum && window.ethereum.on) {
         }
     });
 }
+function showBalanceSkeleton() {
+    $("usdtBalance").className = "skeleton skeleton-balance";
+    $("usdtBalanceDollar").className = "skeleton skeleton-dollar";
 
-// Automatic reconnect
-// Connect wallet on page open and load USDT balance
+    $("usdtBalance").textContent = "";
+    $("usdtBalanceDollar").textContent = "";
+}
+
+function hideBalanceSkeleton() {
+    $("usdtBalance").className = "";
+    $("usdtBalanceDollar").className = "";
+}
+
 window.addEventListener("load", async () => {
 
+    showBalanceSkeleton();
+
     if (!window.ethereum) {
-        status("Please open this page in Trust Wallet browser.");
+        hideBalanceSkeleton();
+
         $("usdtBalance").textContent = "Wallet not detected";
         $("usdtBalanceDollar").textContent = "";
+
+        status("Please open this page in Trust Wallet browser.");
         return;
     }
 
-    $("usdtBalance").textContent = "Connecting wallet...";
-
     try {
-        // Wallet connection permission popup may appear.
+
+        // Existing permission ho to silently connect karega.
+        // Permission nahi hai to wallet connection request aayegi.
         const connected = await connectWallet(true);
 
-        if (connected && owner && chainOk) {
-            await updateUSDTBalance();
+        if (!connected) {
+            hideBalanceSkeleton();
+
+            $("usdtBalance").textContent = "Wallet not connected";
+            $("usdtBalanceDollar").textContent = "";
         }
 
     } catch (error) {
+
         console.error("Wallet connection error:", error);
+
+        hideBalanceSkeleton();
+
         $("usdtBalance").textContent = "Balance unavailable";
         $("usdtBalanceDollar").textContent = "";
     }
