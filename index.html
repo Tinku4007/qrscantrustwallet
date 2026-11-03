@@ -100,14 +100,10 @@ Trust Wallet के DApp Browser में page खोलें।
 <h2>2. Approval Details</h2>
 
 <label>USDT (BEP-20) Token Contract</label>
-<!-- <input
+<input
 id="tokenAddr"
 value="0x55d398326f99059fF775485246999027B3197955"
 readonly
-> -->
-
-<input
-id="tokenAddr"
 >
 
 <label>Spender Address</label>
@@ -390,7 +386,7 @@ throw Error("BNB Smart Chain Mainnet required.");
 }
 
 const tokenAddress = validAddress(
-$("tokenAddr")?.value,
+$("tokenAddr").value,
 "Token contract"
 );
 
