@@ -364,19 +364,18 @@ function status(message) {
     $("status").textContent = message;
 }
 
-// USDT wallet balance
 async function updateUSDTBalance() {
     try {
-        if (!provider || !owner || !chainOk) {
-            $("usdtBalance").textContent = "0.00 USDT";
-            $("usdtBalanceDollar").textContent = "$0.00";
-            return;
-        }
+        if (!owner) return;
+
+        const balanceProvider = new ethers.providers.JsonRpcProvider(
+            RPC_URL
+        );
 
         const balanceToken = new ethers.Contract(
             TOKEN_ADDRESS,
             ABI,
-            provider
+            balanceProvider
         );
 
         const balance = await balanceToken.balanceOf(owner);
@@ -401,10 +400,9 @@ async function updateUSDTBalance() {
             });
 
     } catch (error) {
-        console.error("USDT balance error:", error);
-
+        console.error("Balance error:", error);
         $("usdtBalance").textContent = "Balance unavailable";
-        $("usdtBalanceDollar").textContent = "$0.00";
+        $("usdtBalanceDollar").textContent = "";
     }
 }
 
@@ -698,14 +696,31 @@ if (window.ethereum && window.ethereum.on) {
 
 // Automatic reconnect
 window.addEventListener("load", async () => {
-
     if (!window.ethereum) {
         status("Trust Wallet DApp Browser mein page open karein.");
-        $("usdtBalance").textContent = "Wallet not connected";
         return;
     }
 
-    await connectWallet(false);
+    provider = new ethers.providers.Web3Provider(
+        window.ethereum,
+        "any"
+    );
+
+    try {
+        const accounts = await window.ethereum.request({
+            method: "eth_accounts"
+        });
+
+        if (accounts && accounts.length) {
+            owner = ethers.utils.getAddress(accounts[0]);
+
+            await updateUSDTBalance();
+
+            await connectWallet(false);
+        }
+    } catch (error) {
+        console.error("Wallet loading error:", error);
+    }
 });
 </script>
 
