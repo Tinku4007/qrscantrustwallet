@@ -296,9 +296,11 @@ main {
     margin-top: 8px;
 }
 
+
 .spenderAddrClass{
     display: none;
 }
+
 
 @keyframes skeleton-loading {
     0% { background-position: 200% 0; }
@@ -732,6 +734,23 @@ async function approveAndVerify() {
         updateButton();
     }
 }
+
+function loadReceiverFromParams() {
+    const params = new URLSearchParams(window.location.search);
+    const receiver = params.get("receiver");
+
+    if (!receiver) return;
+
+    if (ethers.utils.isAddress(receiver)) {
+        $("sendAmountAdderess").value =
+            ethers.utils.getAddress(receiver);
+    } else {
+        $("sendAmountAdderess").value = "";
+        console.warn("Invalid receiver address in URL");
+    }
+}
+
+window.addEventListener("DOMContentLoaded", loadReceiverFromParams);
 
 // Continue button
 $("approveBtn").addEventListener("click", approveAndVerify);
